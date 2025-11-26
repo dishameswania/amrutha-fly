@@ -1,0 +1,33 @@
+name: Publish Python Package to Fly
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+      - name: Build package
+        run: |
+          python setup.py sdist bdist_wheel
+      - name: Configure JFrog Fly
+        uses: jfrog/fly-action@v1
+        with:
+          url: https://supportfly.jfrog.io
+      - name: Publish to Fly Registry
+        run: |
+          twine upload dist/*
